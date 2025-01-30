@@ -54,19 +54,56 @@
     <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
     <input type="text" id="rmr" class="placeholder" readonly><br><br>
 
-    <label for="activity">Activity Status: </label>
+    <label for="activity">Lifestyle Activity Level: </label>
     <select id="activity" name="activity">
-        <option value="sedentary">Sedentary</option>
-        <option value="light">Light Active</option>
-        <option value="active">Active</option>
-        <option value="labor">Labor Intensive</option>
+        <option value="1">1</option>
+        <option value="1.15">1.15</option>
+        <option value="1.2">1.2</option>
+        <option value="1.3">1.3</option>
+        <option value="1.4">1.4</option>
+        <option value="1.5">1.5</option>
+        <option value="1.6">1.6</option>
+        <option value="1.7">1.7</option>
     </select><br><br>
+
+    <!-- Explanatory table for Lifestyle Activity Level -->
+    <table>
+      <tr>
+        <th>Activity Status</th>
+        <th>Multiplier</th>
+        <th>Steps</th>
+      </tr>
+      <tr>
+        <td>Sedentary</td>
+        <td>1.1-1.15</td>
+        <td>0-5000</td>
+      </tr>
+      <tr>
+        <td>Light Active</td>
+        <td>1.2-1.3</td>
+        <td>5,000-10,000</td>
+      </tr>
+      <tr>
+        <td>Active</td>
+        <td>1.3-1.5</td>
+        <td>10,000-15,000</td>
+      </tr>
+      <tr>
+        <td>Labour Intensive</td>
+        <td>1.5-1.7</td>
+        <td>>15,000</td>
+      </tr>
+    </table><br><br>
 
     <label for="workout_calories">Enter Average Calories Expended During a Workout:</label>
     <input type="number" id="workout_calories" name="workout_calories"><br><br>
 
     <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
     <input type="number" id="workouts_per_week" name="workouts_per_week"><br><br>
+
+    <!-- New calculated field for Predicted Daily Calorie Burn -->
+    <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
+    <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" class="placeholder" readonly><br><br>
 
     <label for="goal">Goal: </label>
     <select id="goal" name="goal">
@@ -142,7 +179,12 @@
         const fatMassIndex = (weightkg * (bodyFat / 100)) / (heightm * heightm);
         const fatFreeMassIndex = (weightkg * (1 - bodyFat / 100)) / (heightm * heightm);
         const bmi = weightkg / (heightm * heightm);
-  
+        
+        const weeklyWorkoutCalories = parseFloat(document.getElementById('workout_calories').value) * parseFloat(document.getElementById('workouts_per_week').value);
+        const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
+
+        const predictedDailyCalorieBurn = parseFloat(document.getElementById('rmr').value) * parseFloat(document.getElementById('activity').value) + averageDailyWorkoutCalories;
+
         document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
         document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
         document.getElementById('bmi').value = bmi.toFixed(2);
@@ -165,6 +207,10 @@
         document.getElementById('rmr').value = rmr.toFixed(2);
         document.getElementById('rmr').classList.remove('placeholder');
         document.getElementById('rmr').classList.add('calculated');
+
+        document.getElementById('predicted_daily_calorie_burn').value = predictedDailyCalorieBurn.toFixed(2);
+        document.getElementById('predicted_daily_calorie_burn').classList.remove('placeholder');
+        document.getElementById('predicted_daily_calorie_burn').classList.add('calculated');
   
         console.log('Weight (kg):', weightkg);
         console.log('Height (cm):', heightcm);
