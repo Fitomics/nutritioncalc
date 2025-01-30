@@ -10,6 +10,8 @@
       background-color: #ccffcc; /* Light green */
     }
   </style>
+  <!-- Add SQLite library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
 </head>
 <body>
   <h1>Nutrition and Fitness Plan</h1>
@@ -83,69 +85,115 @@
   </form>
 
   <script>
-    document.getElementById('bodyfat').addEventListener('input', calculateValues);
-    document.getElementById('weight').addEventListener('input', calculateValues);
-    document.getElementById('height').addEventListener('input', calculateValues);
-    document.getElementById('age').addEventListener('input', calculateValues);
-    document.getElementById('gender').addEventListener('change', calculateValues);
-
+    let db;
+  
+    async function initDatabase() {
+      const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+      const savedDb = localStorage.getItem('nutritionDb');
+      if (savedDb) {
+        const uInt8Array = new Uint8Array(JSON.parse(savedDb));
+        db = new SQL.Database(uInt8Array);
+      } else {
+        db = new SQL.Database();
+        db.run(`CREATE TABLE IF NOT EXISTS nutrition (key TEXT PRIMARY KEY, value TEXT)`);
+      }
+    }
+  
+    function saveToDatabase(key, value) {
+      db.run(`INSERT OR REPLACE INTO nutrition (key, value) VALUES (?, ?)`, [key, value]);
+      const data = db.export();
+      localStorage.setItem('nutritionDb', JSON.stringify(Array.from(data)));
+      localStorage.setItem(key, value); // Save to local storage
+    }
+  
+    function loadFromDatabase(key) {
+      const stmt = db.prepare(`SELECT value FROM nutrition WHERE key = ?`);
+      stmt.bind([key]);
+      if (stmt.step()) {
+        return stmt.getAsObject().value;
+      }
+      return localStorage.getItem(key); // Load from local storage if not found in the database
+    }
+  
     function calculateValues() {
-      const age = parseFloat(document.getElementById('age').value);
       const weight = parseFloat(document.getElementById('weight').value);
       const bodyFat = parseFloat(document.getElementById('bodyfat').value);
       const height = parseFloat(document.getElementById('height').value);
       const gender = document.getElementById('gender').value;
-
+      const age = parseFloat(document.getElementById('age').value); // Assuming you have an age input field
+  
       if (!isNaN(weight) && !isNaN(bodyFat) && !isNaN(height) && !isNaN(age)) {
         const fatMass = (bodyFat / 100) * weight;
         const fatFreeMass = weight - fatMass;
-
+  
         document.getElementById('fat_mass').value = fatMass.toFixed(2);
         document.getElementById('fat_free_mass').value = fatFreeMass.toFixed(2);
-
+  
         document.getElementById('fat_mass').classList.remove('placeholder');
         document.getElementById('fat_mass').classList.add('calculated');
         document.getElementById('fat_free_mass').classList.remove('placeholder');
         document.getElementById('fat_free_mass').classList.add('calculated');
-
+  
         // Store these calculated variables for later use
         const weightkg = weight / 2.204;
         const heightcm = height * 2.53;
-
+  
         const heightm = heightcm / 100;
         const fatMassIndex = (weightkg * (bodyFat / 100)) / (heightm * heightm);
         const fatFreeMassIndex = (weightkg * (1 - bodyFat / 100)) / (heightm * heightm);
         const bmi = weightkg / (heightm * heightm);
-        
-        let rmr;
-        if (gender === 'male') {
-          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age + 5;
-        } else {
-          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age - 161;
-        }
-
+  
         document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
         document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
         document.getElementById('bmi').value = bmi.toFixed(2);
-        document.getElementById('rmr').value = rmr.toFixed(2);
-
+  
         document.getElementById('fat_mass_index').classList.remove('placeholder');
         document.getElementById('fat_mass_index').classList.add('calculated');
         document.getElementById('fat_free_mass_index').classList.remove('placeholder');
         document.getElementById('fat_free_mass_index').classList.add('calculated');
         document.getElementById('bmi').classList.remove('placeholder');
         document.getElementById('bmi').classList.add('calculated');
+  
+        // Calculate RMR using Mifflin-St Jeor equation
+        let rmr;
+        if (gender === 'male') {
+          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age + 5;
+        } else {
+          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age - 161;
+        }
+  
+        document.getElementById('rmr').value = rmr.toFixed(2);
         document.getElementById('rmr').classList.remove('placeholder');
         document.getElementById('rmr').classList.add('calculated');
-
+  
         console.log('Weight (kg):', weightkg);
         console.log('Height (cm):', heightcm);
+  
+        saveToDatabase('age', age);
+        saveToDatabase('weight', weight);
+        saveToDatabase('bodyfat', bodyFat);
+        saveToDatabase('height', height);
+        saveToDatabase('gender', gender);
       }
     }
-
-    // Add event listener to render calculated values when form fields are completed
-    document.querySelectorAll('input').forEach(input => {
-      input.addEventListener('blur', calculateValues);
+  
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initDatabase();
+      document.getElementById('age').value = loadFromDatabase('age') || '';
+      document.getElementById('weight').value = loadFromDatabase('weight') || '';
+      document.getElementById('bodyfat').value = loadFromDatabase('bodyfat') || '';
+      document.getElementById('height').value = loadFromDatabase('height') || '';
+      document.getElementById('gender').value = loadFromDatabase('gender') || 'male';
+      calculateValues(); // Calculate values based on loaded data
+    });
+  
+    document.querySelectorAll('input, select').forEach(input => {
+      input.addEventListener('blur', (event) => {
+        const key = event.target.id;
+        const value = event.target.value;
+        saveToDatabase(key, value);
+        calculateValues(); // Recalculate values when input changes
+      });
     });
   </script>
 </body>
