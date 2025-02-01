@@ -105,12 +105,36 @@
     <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
     <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" class="placeholder" readonly><br><br>
 
-    <label for="goal">Goal: </label>
+    <label for="goal">Multiplier for Goal: </label>
     <select id="goal" name="goal">
-        <option value="maintenance">Maintenance</option>
-        <option value="fatloss">Fat Loss</option>
-        <option value="muscle">Muscle Gain</option>
+        <option value="0.8">0.8</option>
+        <option value="0.85">0.85</option>
+        <option value="0.9">0.9</option>
+        <option value="1">1</option>
+        <option value="1.1">1.1</option>
+        <option value="1.15">1.15</option>
+        <option value="1.2">1.2</option>
     </select><br><br>
+
+    <!-- Description table for Multiplier for Goal -->
+    <table>
+      <tr>
+        <th>Goal</th>
+        <th>Multiplier</th>
+      </tr>
+      <tr>
+        <td>Maintenance</td>
+        <td>1</td>
+      </tr>
+      <tr>
+        <td>Fat Loss</td>
+        <td>0.8-0.9</td>
+      </tr>
+      <tr>
+        <td>Muscle Gain</td>
+        <td>1.1-1.2</td>
+      </tr>
+    </table><br><br>
 
     <h2>Results:</h2>
     <p>Target Energy Range (kcal): <span id="target_energy"></span></p>
@@ -184,6 +208,8 @@
         const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
 
         const predictedDailyCalorieBurn = parseFloat(document.getElementById('rmr').value) * parseFloat(document.getElementById('activity').value) + averageDailyWorkoutCalories;
+        const goalMultiplier = parseFloat(document.getElementById('goal').value);
+        const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
 
         document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
         document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
@@ -211,6 +237,8 @@
         document.getElementById('predicted_daily_calorie_burn').value = predictedDailyCalorieBurn.toFixed(2);
         document.getElementById('predicted_daily_calorie_burn').classList.remove('placeholder');
         document.getElementById('predicted_daily_calorie_burn').classList.add('calculated');
+
+        document.getElementById('target_energy').textContent = targetEnergy.toFixed(2);
   
         console.log('Weight (kg):', weightkg);
         console.log('Height (cm):', heightcm);
