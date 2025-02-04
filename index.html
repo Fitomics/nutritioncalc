@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Nutrition and Fitness Plan</title>
+  <title>Fitomics Nutrition Calculator</title>
   <style>
     /* Define our color variables */
     :root {
@@ -113,7 +113,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Nutrition and Fitness Plan</h1>
+    <h1>Fitomics Nutrition Calculator</h1>
     <form>
       <div class="form-grid">
         <!-- Personal Information -->
@@ -169,7 +169,7 @@
 
         <!-- Activity and Workout -->
         <div class="form-group">
-          <label for="activity">Lifestyle Activity Level:</label>
+          <label for="activity">Activity Level (table below):</label>
           <select id="activity" name="activity">
             <option value="1.1">1.1</option>
             <option value="1.15">1.15</option>
@@ -224,7 +224,7 @@
           <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" class="placeholder" readonly>
         </div>
         <div class="form-group">
-          <label for="goal">Multiplier for Goal:</label>
+          <label for="goal">Multiplier for Goal (table below):</label>
           <select id="goal" name="goal">
             <option value="0.8">0.8</option>
             <option value="0.85">0.85</option>
@@ -269,13 +269,17 @@
             <option value="1.2" selected>1.2</option>
             <option value="1.4">1.4</option>
             <option value="1.8">1.8</option>
+            <option value="2.0">2.0</option>
+            <option value="2.2">2.2</option>
           </select>
         </div>
         <div class="form-group">
           <label for="fat">Fat (Percent of Calories):</label>
           <select id="fat" name="fat">
             <option value="0.2">20%</option>
+            <option value="0.25">25%</option>
             <option value="0.3" selected>30%</option>
+            <option value="0.35">35%</option>
             <option value="0.4">40%</option>
           </select>
         </div>
@@ -314,7 +318,7 @@
               <td>Fiber</td>
               <td id="fiber_value"></td>
               <td id="fiber_grams"></td>
-              <td id="fiber_calories"></td>
+              <!--<td id="fiber_calories"></td>-->
             </tr>
             <tr>
               <td>Fluid Intake</td>
@@ -403,7 +407,7 @@
           rmr = 10 * weightkg + 6.25 * heightcm - 5 * age - 161;
         }
   
-        document.getElementById('rmr').value = rmr.toFixed(2);
+        document.getElementById('rmr').value = rmr.toFixed(0);
         document.getElementById('rmr').classList.remove('placeholder');
         document.getElementById('rmr').classList.add('calculated');
   
@@ -414,51 +418,51 @@
         const goalMultiplier = parseFloat(document.getElementById('goal').value);
         const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
   
-        document.getElementById('predicted_daily_calorie_burn').value = predictedDailyCalorieBurn.toFixed(2);
+        document.getElementById('predicted_daily_calorie_burn').value = predictedDailyCalorieBurn.toFixed(0);
         document.getElementById('predicted_daily_calorie_burn').classList.remove('placeholder');
         document.getElementById('predicted_daily_calorie_burn').classList.add('calculated');
   
         // Update the results table
   
         // Target Energy Range
-        document.getElementById('target_energy').textContent = targetEnergy.toFixed(2);
+        document.getElementById('target_energy').textContent = targetEnergy.toFixed(0);
   
         // Protein: use the selected grams/kg factor and calculate total protein grams
         const proteinFactor = parseFloat(document.getElementById('protein').value);
         document.getElementById('protein_value').textContent = proteinFactor.toFixed(2) + " g/kg";
         const proteinGrams = weightkg * proteinFactor;
-        document.getElementById('protein_grams').textContent = proteinGrams.toFixed(2) + " g";
+        document.getElementById('protein_grams').textContent = proteinGrams.toFixed(0) + " g";
         const proteinCalories = proteinGrams * 4;
-        document.getElementById('protein_calories').textContent = proteinCalories.toFixed(2) + " kcal";
+        document.getElementById('protein_calories').textContent = proteinCalories.toFixed(0) + " kcal";
   
         // Fat: display the percentage (multiplied by 100) and calculate fat grams
         const fatPercentage = parseFloat(document.getElementById('fat').value);
         document.getElementById('fat_percentage').textContent = (fatPercentage * 100).toFixed(0) + "%";
         const fatGrams = (targetEnergy * fatPercentage) / 9;
-        document.getElementById('fat_grams').textContent = fatGrams.toFixed(2) + " g";
+        document.getElementById('fat_grams').textContent = fatGrams.toFixed(0) + " g";
         const fatCalories = fatGrams * 9;
-        document.getElementById('fat_calories').textContent = fatCalories.toFixed(2) + " kcal";
+        document.getElementById('fat_calories').textContent = fatCalories.toFixed(0) + " kcal";
   
         // Fiber: the recommendation is 14 g per 1000 kcal; show both the recommendation and the total grams
         const fiberGrams = (targetEnergy / 1000) * 14;
         document.getElementById('fiber_value').textContent = "14 g/1000kcal";
-        document.getElementById('fiber_grams').textContent = fiberGrams.toFixed(2) + " g";
+        document.getElementById('fiber_grams').textContent = fiberGrams.toFixed(0) + " g";
         const fiberCalories = fiberGrams * 2;  // Assume 2 kcal per gram for fiber
-        document.getElementById('fiber_calories').textContent = fiberCalories.toFixed(2) + " kcal";
+        // document.getElementById('fiber_calories').textContent = fiberCalories.toFixed(2) + " kcal";
   
-        // Carbs: Calculate remaining calories after protein, fat, and fiber,
+        // Carbs: Calculate remaining calories after protein, fat, and possibly fiber, leaving out fiber calories for now
         // then compute grams (4 kcal/g) and percent of total calories.
-        const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories + fiberCalories);
+        const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories /*+ fiberCalories*/);
         const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
         const carbPercentage = targetEnergy > 0 ? (remainingCarbCalories / targetEnergy) * 100 : 0;
         document.getElementById('carb_percentage').textContent = carbPercentage.toFixed(2) + " %";
-        document.getElementById('carb_grams').textContent = carbGrams.toFixed(2) + " g";
-        document.getElementById('carb_calories').textContent = remainingCarbCalories.toFixed(2) + " kcal";
+        document.getElementById('carb_grams').textContent = carbGrams.toFixed(0) + " g";
+        document.getElementById('carb_calories').textContent = remainingCarbCalories.toFixed(0) + " kcal";
   
         // Fluid: show 40 ml/kg/day on the left and the total fluid volume on the right
         const fluidIntake = weightkg * 40;
         document.getElementById('fluid_ml_per_kg').textContent = "40 ml/kg/day";
-        document.getElementById('fluid_total').textContent = fluidIntake.toFixed(2) + " ml";
+        document.getElementById('fluid_total').textContent = fluidIntake.toFixed(0) + " ml";
   
         // Save key values to the database/local storage
         saveToDatabase('age', age);
