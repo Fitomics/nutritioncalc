@@ -138,11 +138,24 @@
 
     <h2>Results:</h2>
     <p>Target Energy Range (kcal): <span id="target_energy"></span></p>
-    <p>Protein (grams): <span id="protein"></span></p>
-    <p>Fat (grams): <span id="fat"></span></p>
-    <p>Carbs (grams): <span id="carbs"></span></p>
-    <p>Fiber (grams): <span id="fiber"></span></p>
-    <p>Fluid (ounces): <span id="fluid"></span></p>
+    <p>Protein (grams/kilogram): 
+      <select id="protein" name="protein">
+        <option value="0.8">0.8</option>
+        <option value="1.0">1.0</option>
+        <option value="1.2" selected>1.2</option>
+        <option value="1.4">1.4</option>
+        <option value="1.8">1.8</option>
+      </select>
+    </p>
+    <p>Fat (Percent of Calories): 
+      <select id="fat" name="fat">
+        <option value="0.2">20%</option>
+        <option value="0.3" selected>30%</option>
+        <option value="0.4">40%</option>
+      </select>
+    </p>
+    <p>Fiber (grams): <span id="fiber">14g/1000kcal</span></p>
+    <p>Fluid Intake (ml/kg/day): <span id="fluid">40 ml/kg/day</span></p>
   </form>
 
   <script>
@@ -211,6 +224,11 @@
         const goalMultiplier = parseFloat(document.getElementById('goal').value);
         const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
 
+        const fatPercentage = parseFloat(document.getElementById('fat').value);
+        const fatGrams = (targetEnergy * fatPercentage) / 9;
+        const fiberGrams = (targetEnergy / 1000) * 14;
+        const fluidIntake = weightkg * 40;
+
         document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
         document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
         document.getElementById('bmi').value = bmi.toFixed(2);
@@ -239,6 +257,9 @@
         document.getElementById('predicted_daily_calorie_burn').classList.add('calculated');
 
         document.getElementById('target_energy').textContent = targetEnergy.toFixed(2);
+        document.getElementById('fat').textContent = fatGrams.toFixed(2);
+        document.getElementById('fiber').textContent = fiberGrams.toFixed(2);
+        document.getElementById('fluid').textContent = fluidIntake.toFixed(2);
   
         console.log('Weight (kg):', weightkg);
         console.log('Height (cm):', heightcm);
@@ -248,6 +269,8 @@
         saveToDatabase('bodyfat', bodyFat);
         saveToDatabase('height', height);
         saveToDatabase('gender', gender);
+        saveToDatabase('workout_calories', document.getElementById('workout_calories').value);
+        saveToDatabase('workouts_per_week', document.getElementById('workouts_per_week').value);
       }
     }
   
@@ -258,6 +281,8 @@
       document.getElementById('bodyfat').value = loadFromDatabase('bodyfat') || '';
       document.getElementById('height').value = loadFromDatabase('height') || '';
       document.getElementById('gender').value = loadFromDatabase('gender') || 'male';
+      document.getElementById('workout_calories').value = loadFromDatabase('workout_calories') || '';
+      document.getElementById('workouts_per_week').value = loadFromDatabase('workouts_per_week') || '';
       calculateValues(); // Calculate values based on loaded data
     });
   
