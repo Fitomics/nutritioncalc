@@ -9,6 +9,17 @@
     .calculated {
       background-color: #ccffcc; /* Light green */
     }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table, th, td {
+      border: 1px solid #000;
+      padding: 5px;
+    }
+    th {
+      background-color: #ddd;
+    }
   </style>
   <!-- Add SQLite library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
@@ -17,7 +28,8 @@
   <h1>Nutrition and Fitness Plan</h1>
 
   <form>
-    <label for="height">Enter Age (Years):</label>
+    <!-- Input Fields -->
+    <label for="age">Enter Age (Years):</label>
     <input type="number" id="age" name="age"><br><br>
 
     <label for="gender">Select Gender:</label>
@@ -35,20 +47,20 @@
     <label for="bodyfat">Enter Body Fat %:</label>
     <input type="number" id="bodyfat" name="bodyfat"><br><br>
 
-    <!-- New calculated fields with placeholder class -->
+    <!-- Calculated Fields (shown in input boxes) -->
     <label for="fat_mass">Fat Mass (lbs):</label>
     <input type="number" id="fat_mass" name="fat_mass" class="placeholder" readonly><br><br>
 
     <label for="fat_free_mass">Fat-Free Mass (lbs):</label>
     <input type="number" id="fat_free_mass" name="fat_free_mass" class="placeholder" readonly><br><br>
 
-    <label for="fat_mass_index">Fat Mass Index (kg/m^2):</label>
+    <label for="fat_mass_index">Fat Mass Index (kg/m²):</label>
     <input type="number" id="fat_mass_index" name="fat_mass_index" class="placeholder" readonly><br><br>
 
-    <label for="fat_free_mass_index">Fat-Free Mass Index (kg/m^2):</label>
+    <label for="fat_free_mass_index">Fat-Free Mass Index (kg/m²):</label>
     <input type="number" id="fat_free_mass_index" name="fat_free_mass_index" class="placeholder" readonly><br><br>
 
-    <label for="bmi">Body Mass Index (kg/m^2):</label>
+    <label for="bmi">Body Mass Index (kg/m²):</label>
     <input type="number" id="bmi" name="bmi" class="placeholder" readonly><br><br>
 
     <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
@@ -56,17 +68,17 @@
 
     <label for="activity">Lifestyle Activity Level: </label>
     <select id="activity" name="activity">
-        <option value="1">1</option>
-        <option value="1.15">1.15</option>
-        <option value="1.2">1.2</option>
-        <option value="1.3">1.3</option>
-        <option value="1.4">1.4</option>
-        <option value="1.5">1.5</option>
-        <option value="1.6">1.6</option>
-        <option value="1.7">1.7</option>
+      <option value="1">1</option>
+      <option value="1.15">1.15</option>
+      <option value="1.2">1.2</option>
+      <option value="1.3">1.3</option>
+      <option value="1.4">1.4</option>
+      <option value="1.5">1.5</option>
+      <option value="1.6">1.6</option>
+      <option value="1.7">1.7</option>
     </select><br><br>
 
-    <!-- Explanatory table for Lifestyle Activity Level -->
+    <!-- Explanatory Table for Activity -->
     <table>
       <tr>
         <th>Activity Status</th>
@@ -101,22 +113,21 @@
     <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
     <input type="number" id="workouts_per_week" name="workouts_per_week"><br><br>
 
-    <!-- New calculated field for Predicted Daily Calorie Burn -->
     <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
     <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" class="placeholder" readonly><br><br>
 
     <label for="goal">Multiplier for Goal: </label>
     <select id="goal" name="goal">
-        <option value="0.8">0.8</option>
-        <option value="0.85">0.85</option>
-        <option value="0.9">0.9</option>
-        <option value="1">1</option>
-        <option value="1.1">1.1</option>
-        <option value="1.15">1.15</option>
-        <option value="1.2">1.2</option>
+      <option value="0.8">0.8</option>
+      <option value="0.85">0.85</option>
+      <option value="0.9">0.9</option>
+      <option value="1">1</option>
+      <option value="1.1">1.1</option>
+      <option value="1.15">1.15</option>
+      <option value="1.2">1.2</option>
     </select><br><br>
 
-    <!-- Description table for Multiplier for Goal -->
+    <!-- Description Table for Goal -->
     <table>
       <tr>
         <th>Goal</th>
@@ -136,9 +147,11 @@
       </tr>
     </table><br><br>
 
+    <!-- Nutrient Selection and Results Table -->
     <h2>Results:</h2>
-    <p>Target Energy Range (kcal): <span id="target_energy"></span></p>
-    <p>Protein (grams/kilogram): 
+    <!-- Protein and Fat selection (the fat select remains intact) -->
+    <p>
+      Protein (grams/kilogram): 
       <select id="protein" name="protein">
         <option value="0.8">0.8</option>
         <option value="1.0">1.0</option>
@@ -147,15 +160,58 @@
         <option value="1.8">1.8</option>
       </select>
     </p>
-    <p>Fat (Percent of Calories): 
+    <p>
+      Fat (Percent of Calories): 
       <select id="fat" name="fat">
         <option value="0.2">20%</option>
         <option value="0.3" selected>30%</option>
         <option value="0.4">40%</option>
       </select>
     </p>
-    <p>Fiber (grams): <span id="fiber">14g/1000kcal</span></p>
-    <p>Fluid Intake (ml/kg/day): <span id="fluid">40 ml/kg/day</span></p>
+
+    <!-- Results table showing original values, calculated amounts, and calculated calories -->
+    <table id="resultsTable">
+      <tr>
+        <th>Nutrient</th>
+        <th>Value</th>
+        <th>Calculated Amount</th>
+        <th>Calculated Calories</th>
+      </tr>
+      <tr>
+        <td>Target Energy Range (kcal)</td>
+        <td colspan="3" id="target_energy"></td>
+      </tr>
+      <tr>
+        <td>Protein</td>
+        <td id="protein_value"></td>
+        <td id="protein_grams"></td>
+        <td id="protein_calories"></td>
+      </tr>
+      <tr>
+        <td>Fat</td>
+        <td id="fat_percentage"></td>
+        <td id="fat_grams"></td>
+        <td id="fat_calories"></td>
+      </tr>
+      <tr>
+        <td>Carbs</td>
+        <td id="carb_percentage"></td>
+        <td id="carb_grams"></td>
+        <td id="carb_calories"></td>
+      </tr>
+      <tr>
+        <td>Fiber</td>
+        <td id="fiber_value"></td>
+        <td id="fiber_grams"></td>
+        <td id="fiber_calories"></td>
+      </tr>
+      <tr>
+        <td>Fluid Intake</td>
+        <td id="fluid_ml_per_kg"></td>
+        <td id="fluid_total"></td>
+        <td></td>
+      </tr>
+    </table>
   </form>
 
   <script>
@@ -177,7 +233,7 @@
       db.run(`INSERT OR REPLACE INTO nutrition (key, value) VALUES (?, ?)`, [key, value]);
       const data = db.export();
       localStorage.setItem('nutritionDb', JSON.stringify(Array.from(data)));
-      localStorage.setItem(key, value); // Save to local storage
+      localStorage.setItem(key, value);
     }
   
     function loadFromDatabase(key) {
@@ -186,7 +242,7 @@
       if (stmt.step()) {
         return stmt.getAsObject().value;
       }
-      return localStorage.getItem(key); // Load from local storage if not found in the database
+      return localStorage.getItem(key);
     }
   
     function calculateValues() {
@@ -194,41 +250,26 @@
       const bodyFat = parseFloat(document.getElementById('bodyfat').value);
       const height = parseFloat(document.getElementById('height').value);
       const gender = document.getElementById('gender').value;
-      const age = parseFloat(document.getElementById('age').value); 
+      const age = parseFloat(document.getElementById('age').value);
   
       if (!isNaN(weight) && !isNaN(bodyFat) && !isNaN(height) && !isNaN(age)) {
+        // Calculate basic body composition
         const fatMass = (bodyFat / 100) * weight;
         const fatFreeMass = weight - fatMass;
-  
         document.getElementById('fat_mass').value = fatMass.toFixed(2);
         document.getElementById('fat_free_mass').value = fatFreeMass.toFixed(2);
-  
         document.getElementById('fat_mass').classList.remove('placeholder');
         document.getElementById('fat_mass').classList.add('calculated');
         document.getElementById('fat_free_mass').classList.remove('placeholder');
         document.getElementById('fat_free_mass').classList.add('calculated');
   
-        // Store these calculated variables for later use
         const weightkg = weight / 2.204;
         const heightcm = height * 2.53;
-  
         const heightm = heightcm / 100;
         const fatMassIndex = (weightkg * (bodyFat / 100)) / (heightm * heightm);
         const fatFreeMassIndex = (weightkg * (1 - bodyFat / 100)) / (heightm * heightm);
         const bmi = weightkg / (heightm * heightm);
-        
-        const weeklyWorkoutCalories = parseFloat(document.getElementById('workout_calories').value) * parseFloat(document.getElementById('workouts_per_week').value);
-        const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
-
-        const predictedDailyCalorieBurn = parseFloat(document.getElementById('rmr').value) * parseFloat(document.getElementById('activity').value) + averageDailyWorkoutCalories;
-        const goalMultiplier = parseFloat(document.getElementById('goal').value);
-        const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
-
-        const fatPercentage = parseFloat(document.getElementById('fat').value);
-        const fatGrams = (targetEnergy * fatPercentage) / 9;
-        const fiberGrams = (targetEnergy / 1000) * 14;
-        const fluidIntake = weightkg * 40;
-
+  
         document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
         document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
         document.getElementById('bmi').value = bmi.toFixed(2);
@@ -240,7 +281,7 @@
         document.getElementById('bmi').classList.remove('placeholder');
         document.getElementById('bmi').classList.add('calculated');
   
-        // Calculate RMR using Mifflin-St Jeor equation
+        // Calculate RMR using the Mifflin-St Jeor equation
         let rmr;
         if (gender === 'male') {
           rmr = 10 * weightkg + 6.25 * heightcm - 5 * age + 5;
@@ -251,19 +292,64 @@
         document.getElementById('rmr').value = rmr.toFixed(2);
         document.getElementById('rmr').classList.remove('placeholder');
         document.getElementById('rmr').classList.add('calculated');
-
+  
+        // Calculate predicted daily calorie burn
+        const weeklyWorkoutCalories = parseFloat(document.getElementById('workout_calories').value) * parseFloat(document.getElementById('workouts_per_week').value);
+        const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
+        const predictedDailyCalorieBurn = rmr * parseFloat(document.getElementById('activity').value) + averageDailyWorkoutCalories;
+        const goalMultiplier = parseFloat(document.getElementById('goal').value);
+        const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
+  
         document.getElementById('predicted_daily_calorie_burn').value = predictedDailyCalorieBurn.toFixed(2);
         document.getElementById('predicted_daily_calorie_burn').classList.remove('placeholder');
         document.getElementById('predicted_daily_calorie_burn').classList.add('calculated');
-
+  
+        // Update the results table
+  
+        // Target Energy Range
         document.getElementById('target_energy').textContent = targetEnergy.toFixed(2);
-        document.getElementById('fat').textContent = fatGrams.toFixed(2);
-        document.getElementById('fiber').textContent = fiberGrams.toFixed(2);
-        document.getElementById('fluid').textContent = fluidIntake.toFixed(2);
+  
+        // Protein: use the selected grams/kg factor and calculate total protein grams
+        const proteinFactor = parseFloat(document.getElementById('protein').value);
+        document.getElementById('protein_value').textContent = proteinFactor.toFixed(2) + " g/kg";
+        const proteinGrams = weightkg * proteinFactor;
+        document.getElementById('protein_grams').textContent = proteinGrams.toFixed(2) + " g";
+        const proteinCalories = proteinGrams * 4;
+        document.getElementById('protein_calories').textContent = proteinCalories.toFixed(2) + " kcal";
+  
+        // Fat: display the percentage (multiplied by 100) and calculate fat grams
+        const fatPercentage = parseFloat(document.getElementById('fat').value);
+        document.getElementById('fat_percentage').textContent = (fatPercentage * 100).toFixed(0) + "%";
+        const fatGrams = (targetEnergy * fatPercentage) / 9;
+        document.getElementById('fat_grams').textContent = fatGrams.toFixed(2) + " g";
+        const fatCalories = fatGrams * 9;
+        document.getElementById('fat_calories').textContent = fatCalories.toFixed(2) + " kcal";
+  
+        // Fiber: the recommendation is 14 g per 1000 kcal; show both the recommendation and the total grams
+        const fiberGrams = (targetEnergy / 1000) * 14;
+        document.getElementById('fiber_value').textContent = "14 g/1000kcal";
+        document.getElementById('fiber_grams').textContent = fiberGrams.toFixed(2) + " g";
+        const fiberCalories = fiberGrams * 2;  // Assume 2 kcal per gram for fiber
+        document.getElementById('fiber_calories').textContent = fiberCalories.toFixed(2) + " kcal";
+  
+        // Carbs: Calculate remaining calories after protein, fat, and fiber,
+        // then compute grams (4 kcal/g) and percent of total calories.
+        const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories + fiberCalories);
+        const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
+        const carbPercentage = targetEnergy > 0 ? (remainingCarbCalories / targetEnergy) * 100 : 0;
+        document.getElementById('carb_percentage').textContent = carbPercentage.toFixed(2) + " %";
+        document.getElementById('carb_grams').textContent = carbGrams.toFixed(2) + " g";
+        document.getElementById('carb_calories').textContent = remainingCarbCalories.toFixed(2) + " kcal";
+  
+        // Fluid: show 40 ml/kg/day on the left and the total fluid volume on the right
+        const fluidIntake = weightkg * 40;
+        document.getElementById('fluid_ml_per_kg').textContent = "40 ml/kg/day";
+        document.getElementById('fluid_total').textContent = fluidIntake.toFixed(2) + " ml";
   
         console.log('Weight (kg):', weightkg);
         console.log('Height (cm):', heightcm);
   
+        // Save key values to the database/local storage
         saveToDatabase('age', age);
         saveToDatabase('weight', weight);
         saveToDatabase('bodyfat', bodyFat);
