@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Nutrition Calculator for Weight Goals</title>
+  <title>Nutrition and Fitness Plan</title>
   <style>
     /* Define our color variables */
     :root {
-      --primary-bg: hwb(235 15% 52%);       /* Light blue */
+      --primary-bg: #2b2e82;       /* Light blue */
       --secondary-bg: #fff8e1;     /* Light gold */
       --accent-color: #ffcc80;     /* Warm accent (gold-ish) */
       --text-color: #333;
       --border-color: #ccc;
-      --input-bg-placeholder: var(--secondary-bg);
+      /* Both placeholder (empty computed fields) and calculated fields use light blue */
+      --input-bg-placeholder: rgba(43, 46, 130, 0.3); /* Transparent dark blue */
       --input-bg-calculated: var(--primary-bg);
     }
 
@@ -75,11 +76,12 @@
       font-size: 1rem;
     }
 
-    /* “Placeholder” inputs (before calculation) get a light gold background */
+    /* Computed (read-only) fields use these classes.
+       Now, if data is not available (i.e. still the default state),
+       they show a light blue background. */
     .placeholder {
       background-color: var(--input-bg-placeholder);
     }
-    /* When a value is calculated, use light blue */
     .calculated {
       background-color: var(--input-bg-calculated);
     }
@@ -111,7 +113,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Nutrition Calculator for Weight Goals</h1>
+    <h1>Nutrition and Fitness Plan</h1>
     <form>
       <div class="form-grid">
         <!-- Personal Information -->
@@ -470,6 +472,12 @@
         saveToDatabase('goal', document.getElementById('goal').value);
         saveToDatabase('protein', document.getElementById('protein').value);
         saveToDatabase('fat', document.getElementById('fat').value);
+      } else {
+        // Ensure placeholder color is applied if values are not calculated
+        document.querySelectorAll('.placeholder').forEach(element => {
+          element.classList.add('placeholder');
+          element.classList.remove('calculated');
+        });
       }
     }
   
@@ -490,13 +498,13 @@
     });
   
     document.querySelectorAll('input, select').forEach(input => {
-      input.addEventListener('blur', (event) => {
-        const key = event.target.id;
-        const value = event.target.value;
-        saveToDatabase(key, value);
-        calculateValues(); // Recalculate values when input changes
-      });
-    });
+    input.addEventListener('change', (event) => {
+    const key = event.target.id;
+    const value = event.target.value;
+    saveToDatabase(key, value);
+    calculateValues(); // Recalculate values as soon as the value changes
+  });
+});
   </script>
 </body>
 </html>
