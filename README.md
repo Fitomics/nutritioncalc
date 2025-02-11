@@ -1,4 +1,4 @@
-Predicted RMR Formula:
+#Predicted RMR Formula:
 =IF(B8="FEMALE",(10*C10)+(6.25*C9)-(5*C7)-161,(10*C10)+(6.25*C9)-(5*C7)+5)
 
 Where: 
