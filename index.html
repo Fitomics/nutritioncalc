@@ -341,7 +341,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
   <script>
     let db;
-  
+    
     async function initDatabase() {
       const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
       const savedDb = localStorage.getItem('nutritionDb');
@@ -353,14 +353,14 @@
         db.run(`CREATE TABLE IF NOT EXISTS nutrition (key TEXT PRIMARY KEY, value TEXT)`);
       }
     }
-  
+    
     function saveToDatabase(key, value) {
       db.run(`INSERT OR REPLACE INTO nutrition (key, value) VALUES (?, ?)`, [key, value]);
       const data = db.export();
       localStorage.setItem('nutritionDb', JSON.stringify(Array.from(data)));
       localStorage.setItem(key, value);
     }
-  
+    
     function loadFromDatabase(key) {
       const stmt = db.prepare(`SELECT value FROM nutrition WHERE key = ?`);
       stmt.bind([key]);
@@ -369,7 +369,7 @@
       }
       return localStorage.getItem(key);
     }
-  
+    
     /**
      * Updates the appearance of user input fields.
      * Numeric inputs that are empty or invalid receive the .input-empty class.
@@ -387,7 +387,7 @@
         }
       });
     }
-  
+    
     /**
      * Calculates body composition values.
      */
@@ -398,9 +398,9 @@
       const age = parseFloat(document.getElementById('age').value);
       const gender = document.getElementById('gender').value;
       const computedFields = ['fat_mass', 'fat_free_mass', 'fat_mass_index', 'fat_free_mass_index', 'bmi', 'rmr'];
-  
+    
       if (!isNaN(weight) && !isNaN(bodyFat) && !isNaN(height) && !isNaN(age)) {
-        // Fat mass and fat-free mass (in lbs)
+        // Calculate fat mass and fat-free mass (in lbs)
         const fatMass = (bodyFat / 100) * weight;
         const fatFreeMass = weight - fatMass;
         document.getElementById('fat_mass').value = fatMass.toFixed(2);
@@ -410,12 +410,12 @@
           elem.classList.remove('calc-unavailable');
           elem.classList.add('calc-available');
         });
-  
-        // Convert weight to kg and height to cm (and then to m)
+    
+        // Convert weight to kg and height to cm (then to m)
         const weightkg = weight / 2.204;
         const heightcm = height * 2.53;
         const heightm = heightcm / 100;
-  
+    
         // Calculate indexes and BMI (kg/m²)
         const fatMassIndex = (weightkg * (bodyFat / 100)) / (heightm * heightm);
         const fatFreeMassIndex = (weightkg * (1 - bodyFat / 100)) / (heightm * heightm);
@@ -428,7 +428,7 @@
           elem.classList.remove('calc-unavailable');
           elem.classList.add('calc-available');
         });
-  
+    
         // Calculate RMR using the Mifflin-St Jeor equation
         let rmr;
         if (gender === 'male') {
@@ -452,7 +452,7 @@
         });
       }
     }
-  
+    
     /**
      * Performs calculations that depend on workout, activity, and nutrient data.
      */
@@ -461,7 +461,7 @@
       const workoutsPerWeek = parseFloat(document.getElementById('workouts_per_week').value);
       const activity = parseFloat(document.getElementById('activity').value);
       const goalMultiplier = parseFloat(document.getElementById('goal').value);
-  
+    
       if (!isNaN(workoutCalories) && !isNaN(workoutsPerWeek)) {
         const rmrVal = parseFloat(document.getElementById('rmr').value);
         if (!isNaN(rmrVal)) {
@@ -469,32 +469,34 @@
           const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
           const predictedDailyCalorieBurn = rmrVal * activity + averageDailyWorkoutCalories;
           const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
-  
+    
           const predElem = document.getElementById('predicted_daily_calorie_burn');
           predElem.value = predictedDailyCalorieBurn.toFixed(0);
           predElem.classList.remove('calc-unavailable');
           predElem.classList.add('calc-available');
-  
-          // Update table cells in the results table
+    
+          // Function to update table cells
           const updateTableField = (id, content) => {
             const elem = document.getElementById(id);
             elem.textContent = content;
             elem.classList.remove('calc-unavailable');
             elem.classList.add('calc-available');
           };
-  
+    
           updateTableField('target_energy', targetEnergy.toFixed(0));
-  
+    
           // Protein calculations
           const proteinFactor = parseFloat(document.getElementById('protein').value);
           const weight = parseFloat(document.getElementById('weight').value);
           const weightkg = weight / 2.204;
           updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg");
+          // Retrieve fatFreeMass from the DOM
+          const fatFreeMass = parseFloat(document.getElementById('fat_free_mass').value);
           const proteinGrams = fatFreeMass * proteinFactor;
           updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
           const proteinCalories = proteinGrams * 4;
           updateTableField('protein_calories', proteinCalories.toFixed(0) + " kcal");
-  
+    
           // Fat calculations
           const fatPercentage = parseFloat(document.getElementById('fat').value);
           updateTableField('fat_percentage', (fatPercentage * 100).toFixed(0) + "%");
@@ -502,12 +504,12 @@
           updateTableField('fat_grams', fatGrams.toFixed(0) + " g");
           const fatCalories = fatGrams * 9;
           updateTableField('fat_calories', fatCalories.toFixed(0) + " kcal");
-  
+    
           // Fiber calculations
           const fiberGrams = (targetEnergy / 1000) * 14;
           updateTableField('fiber_value', "14 g/1000kcal");
           updateTableField('fiber_grams', fiberGrams.toFixed(0) + " g");
-  
+    
           // Carbs calculations
           const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories);
           const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
@@ -515,14 +517,25 @@
           updateTableField('carb_percentage', carbPercentage.toFixed(2) + " %");
           updateTableField('carb_grams', carbGrams.toFixed(0) + " g");
           updateTableField('carb_calories', remainingCarbCalories.toFixed(0) + " kcal");
-  
+    
           // Fluid calculations
           const fluidIntake = weightkg * 40;
           updateTableField('fluid_ml_per_kg', "40 ml/kg/day");
           updateTableField('fluid_total', fluidIntake.toFixed(0) + " ml");
+        } else {
+          // RMR is unavailable (e.g., due to missing body fat data)
+          const tableFields = ['target_energy', 'protein_value', 'protein_grams', 'protein_calories', 
+                               'fat_percentage', 'fat_grams', 'fat_calories', 'fiber_value', 'fiber_grams', 
+                               'carb_percentage', 'carb_grams', 'carb_calories', 'fluid_ml_per_kg', 'fluid_total'];
+          tableFields.forEach(id => {
+            const elem = document.getElementById(id);
+            elem.textContent = "";
+            elem.classList.remove('calc-available');
+            elem.classList.add('calc-unavailable');
+          });
         }
       } else {
-        // Clear and mark calculated fields as unavailable
+        // Clear calculated fields if workout information is missing
         const inputFields = ['predicted_daily_calorie_burn'];
         const tableFields = ['target_energy', 'protein_value', 'protein_grams', 'protein_calories', 
                              'fat_percentage', 'fat_grams', 'fat_calories', 'fiber_value', 'fiber_grams', 
@@ -541,7 +554,7 @@
         });
       }
     }
-  
+    
     /**
      * Main function to calculate all values.
      */
@@ -549,7 +562,7 @@
       updateInputStyles();
       calculateBodyComposition();
       calculateOtherValues();
-  
+    
       // Save common values to the database/local storage
       saveToDatabase('age', document.getElementById('age').value);
       saveToDatabase('weight', document.getElementById('weight').value);
@@ -563,7 +576,7 @@
       saveToDatabase('protein', document.getElementById('protein').value);
       saveToDatabase('fat', document.getElementById('fat').value);
     }
-  
+    
     document.addEventListener('DOMContentLoaded', async () => {
       await initDatabase();
       document.getElementById('age').value = loadFromDatabase('age') || '';
@@ -579,7 +592,8 @@
       document.getElementById('fat').value = loadFromDatabase('fat') || '0.3';
       calculateValues();
     });
-  
+    
+    // Listen for changes on all input and select fields
     document.querySelectorAll('input, select').forEach(input => {
       input.addEventListener('change', (event) => {
         saveToDatabase(event.target.id, event.target.value);
