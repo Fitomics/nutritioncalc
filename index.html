@@ -493,7 +493,8 @@
           updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg");
           // Retrieve fatFreeMass from the DOM
           const fatFreeMass = parseFloat(document.getElementById('fat_free_mass').value);
-          const proteinGrams = fatFreeMass * proteinFactor;
+          const fatFreeMasskg = fatFreeMass / 2.204;
+          const proteinGrams = fatFreeMasskg * proteinFactor;
           updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
           const proteinCalories = proteinGrams * 4;
           updateTableField('protein_calories', proteinCalories.toFixed(0) + " kcal");
