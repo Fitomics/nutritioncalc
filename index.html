@@ -258,7 +258,6 @@
             <option value="2.4">2.4</option>
             <option value="2.6">2.6</option>
             <option value="2.8">2.8</option>
-
           </select>
         </div>
         <div class="form-group">
@@ -462,82 +461,70 @@
       const workoutsPerWeek = parseFloat(document.getElementById('workouts_per_week').value);
       const activity = parseFloat(document.getElementById('activity').value);
       const goalMultiplier = parseFloat(document.getElementById('goal').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const rmrVal = parseFloat(document.getElementById('rmr').value);
+      const fatFreeMass = parseFloat(document.getElementById('fat_free_mass').value);
     
-      if (!isNaN(workoutCalories) && !isNaN(workoutsPerWeek)) {
-        const rmrVal = parseFloat(document.getElementById('rmr').value);
-        if (!isNaN(rmrVal)) {
-          const weeklyWorkoutCalories = workoutCalories * workoutsPerWeek;
-          const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
-          const predictedDailyCalorieBurn = rmrVal * activity + averageDailyWorkoutCalories;
-          const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
+      // Check that required fields are valid numbers before calculating
+      if (!isNaN(workoutCalories) && !isNaN(workoutsPerWeek) && !isNaN(weight) && !isNaN(rmrVal) && !isNaN(fatFreeMass)) {
+        const weeklyWorkoutCalories = workoutCalories * workoutsPerWeek;
+        const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
+        const predictedDailyCalorieBurn = rmrVal * activity + averageDailyWorkoutCalories;
+        const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
     
-          const predElem = document.getElementById('predicted_daily_calorie_burn');
-          predElem.value = predictedDailyCalorieBurn.toFixed(0);
-          predElem.classList.remove('calc-unavailable');
-          predElem.classList.add('calc-available');
+        const predElem = document.getElementById('predicted_daily_calorie_burn');
+        predElem.value = predictedDailyCalorieBurn.toFixed(0);
+        predElem.classList.remove('calc-unavailable');
+        predElem.classList.add('calc-available');
     
-          // Function to update table cells
-          const updateTableField = (id, content) => {
-            const elem = document.getElementById(id);
-            elem.textContent = content;
-            elem.classList.remove('calc-unavailable');
-            elem.classList.add('calc-available');
-          };
+        // Function to update table cells
+        const updateTableField = (id, content) => {
+          const elem = document.getElementById(id);
+          elem.textContent = content;
+          elem.classList.remove('calc-unavailable');
+          elem.classList.add('calc-available');
+        };
     
-          updateTableField('target_energy', targetEnergy.toFixed(0));
+        updateTableField('target_energy', targetEnergy.toFixed(0));
     
-          // Protein calculations
-          const proteinFactor = parseFloat(document.getElementById('protein').value);
-          const weight = parseFloat(document.getElementById('weight').value);
-          const weightkg = weight / 2.204;
-          updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg");
-          // Retrieve fatFreeMass from the DOM
-          const fatFreeMass = parseFloat(document.getElementById('fat_free_mass').value);
-          const fatFreeMasskg = fatFreeMass / 2.204;
-          const proteinGrams = fatFreeMasskg * proteinFactor;
-          updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
-          const proteinCalories = proteinGrams * 4;
-          updateTableField('protein_calories', proteinCalories.toFixed(0) + " kcal");
+        // Protein calculations
+        const proteinFactor = parseFloat(document.getElementById('protein').value);
+        updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg");
+        // Calculate protein grams based on fat-free mass (kg)
+        const fatFreeMasskg = fatFreeMass / 2.204;
+        const proteinGrams = fatFreeMasskg * proteinFactor;
+        updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
+        const proteinCalories = proteinGrams * 4;
+        updateTableField('protein_calories', proteinCalories.toFixed(0) + " kcal");
     
-          // Fat calculations
-          const fatPercentage = parseFloat(document.getElementById('fat').value);
-          updateTableField('fat_percentage', (fatPercentage * 100).toFixed(0) + "%");
-          const fatGrams = (targetEnergy * fatPercentage) / 9;
-          updateTableField('fat_grams', fatGrams.toFixed(0) + " g");
-          const fatCalories = fatGrams * 9;
-          updateTableField('fat_calories', fatCalories.toFixed(0) + " kcal");
+        // Fat calculations
+        const fatPercentage = parseFloat(document.getElementById('fat').value);
+        updateTableField('fat_percentage', (fatPercentage * 100).toFixed(0) + "%");
+        const fatGrams = (targetEnergy * fatPercentage) / 9;
+        updateTableField('fat_grams', fatGrams.toFixed(0) + " g");
+        const fatCalories = fatGrams * 9;
+        updateTableField('fat_calories', fatCalories.toFixed(0) + " kcal");
     
-          // Fiber calculations
-          const fiberGrams = (targetEnergy / 1000) * 14;
-          updateTableField('fiber_value', "14 g/1000kcal");
-          updateTableField('fiber_grams', fiberGrams.toFixed(0) + " g");
+        // Fiber calculations
+        const fiberGrams = (targetEnergy / 1000) * 14;
+        updateTableField('fiber_value', "14 g/1000kcal");
+        updateTableField('fiber_grams', fiberGrams.toFixed(0) + " g");
     
-          // Carbs calculations
-          const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories);
-          const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
-          const carbPercentage = targetEnergy > 0 ? (remainingCarbCalories / targetEnergy) * 100 : 0;
-          updateTableField('carb_percentage', carbPercentage.toFixed(2) + " %");
-          updateTableField('carb_grams', carbGrams.toFixed(0) + " g");
-          updateTableField('carb_calories', remainingCarbCalories.toFixed(0) + " kcal");
+        // Carbs calculations
+        const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories);
+        const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
+        const carbPercentage = targetEnergy > 0 ? (remainingCarbCalories / targetEnergy) * 100 : 0;
+        updateTableField('carb_percentage', carbPercentage.toFixed(2) + " %");
+        updateTableField('carb_grams', carbGrams.toFixed(0) + " g");
+        updateTableField('carb_calories', remainingCarbCalories.toFixed(0) + " kcal");
     
-          // Fluid calculations
-          const fluidIntake = weightkg * 40;
-          updateTableField('fluid_ml_per_kg', "40 ml/kg/day");
-          updateTableField('fluid_total', fluidIntake.toFixed(0) + " ml");
-        } else {
-          // RMR is unavailable (e.g., due to missing body fat data)
-          const tableFields = ['target_energy', 'protein_value', 'protein_grams', 'protein_calories', 
-                               'fat_percentage', 'fat_grams', 'fat_calories', 'fiber_value', 'fiber_grams', 
-                               'carb_percentage', 'carb_grams', 'carb_calories', 'fluid_ml_per_kg', 'fluid_total'];
-          tableFields.forEach(id => {
-            const elem = document.getElementById(id);
-            elem.textContent = "";
-            elem.classList.remove('calc-available');
-            elem.classList.add('calc-unavailable');
-          });
-        }
+        // Fluid calculations
+        const weightkg = weight / 2.204;
+        const fluidIntake = weightkg * 40;
+        updateTableField('fluid_ml_per_kg', "40 ml/kg/day");
+        updateTableField('fluid_total', fluidIntake.toFixed(0) + " ml");
       } else {
-        // Clear calculated fields if workout information is missing
+        // Clear calculated fields if any required input is missing
         const inputFields = ['predicted_daily_calorie_burn'];
         const tableFields = ['target_energy', 'protein_value', 'protein_grams', 'protein_calories', 
                              'fat_percentage', 'fat_grams', 'fat_calories', 'fiber_value', 'fiber_grams', 
@@ -590,12 +577,13 @@
       document.getElementById('workout_calories').value = loadFromDatabase('workout_calories') || '';
       document.getElementById('workouts_per_week').value = loadFromDatabase('workouts_per_week') || '';
       document.getElementById('goal').value = loadFromDatabase('goal') || '1';
-      document.getElementById('protein').value = loadFromDatabase('protein') || '1.2';
+      // Set protein default to "2.2" if no stored value exists
+      document.getElementById('protein').value = loadFromDatabase('protein') || '2.2';
       document.getElementById('fat').value = loadFromDatabase('fat') || '0.3';
       calculateValues();
     });
     
-    // Listen for changes on all input and select fields
+    // Listen for changes on all input and select fields and ensure values render correctly
     document.querySelectorAll('input, select').forEach(input => {
       input.addEventListener('change', (event) => {
         saveToDatabase(event.target.id, event.target.value);
