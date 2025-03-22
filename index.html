@@ -6,6 +6,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <!-- Include Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Expletus+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* Global Box Sizing */
     *, *::before, *::after {
@@ -14,7 +15,7 @@
     
     /* Color Variables */
     :root {
-      --primary-bg: #2b2e82;       /* Dark blue background for page */
+      --primary-bg: #003b59;       /* Dark blue background for page */
       --secondary-bg: #fff8e1;     /* Light gold for table headers */
       --accent-color: #ffcc80;     /* Warm accent (gold-ish) */
       --text-color: #333;
@@ -24,7 +25,7 @@
     /* Global Resets and Fonts */
     body {
       margin: 0;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Expletus Sans', sans-serif;
       background-color: var(--primary-bg);
       color: var(--text-color);
       padding: 1rem;
@@ -251,12 +252,13 @@
           <h2>Results:</h2>
         </div>
         <div class="form-group">
-          <label for="protein">Protein (grams/kilogram):</label>
+          <label for="protein">Protein (grams/kilogram of FFM):</label>
           <select id="protein" name="protein">
             <option value="0.8">0.8</option>
             <option value="1.0">1.0</option>
             <option value="1.2" selected>1.2</option>
             <option value="1.4">1.4</option>
+            <option value="1.6">1.6</option>
             <option value="1.8">1.8</option>
             <option value="2.0">2.0</option>
             <option value="2.2">2.2</option>
@@ -496,7 +498,7 @@
           const proteinFactor = parseFloat(document.getElementById('protein').value);
           const weight = parseFloat(document.getElementById('weight').value);
           const weightkg = weight / 2.204;
-          updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg");
+          updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg of FFM");
           const proteinGrams = weightkg * proteinFactor;
           updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
           const proteinCalories = proteinGrams * 4;
@@ -602,19 +604,56 @@
   function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-  
+
+    // Create a canvas to read the image data
+    const img = document.createElement('img');
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw background with reduced opacity
+      ctx.globalAlpha = 0.3; // Adjust this value between 0.1-0.5 for desired transparency
+      ctx.drawImage(img, 0, 0);
+      ctx.globalAlpha = 1.0; // Reset to default
+      
+      // Get image data
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Add to PDF
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+      
+      // Continue with PDF generation
+      generatePDFContent(doc);
+    };
+    
+    img.onerror = function() {
+      console.error('Failed to load image for PDF background');
+      generatePDFContent(doc);
+    };
+    
+    // Use path without leading ./ for better cross-platform compatibility
+    img.src = 'background.png'; 
+  }
+
+  function generatePDFContent(doc) {
+    // Make text content more visible with darker font
+    doc.setTextColor(0, 0, 0); // Black text
+    
     // Add title
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Fitomics Nutrition Report', 15, 20);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-  
+    doc.text('Fitomics Nutrition Calculator Report', 15, 20);
+    
     // Input Parameters Section
-    doc.setFont('helvetica', 'bold');
-    doc.text('Input Data', 15, 35);
+    doc.setFontSize(14);
+    doc.text('Personal Information', 15, 35);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-  
+    
     const inputs = [
       ['Age:', document.getElementById('age').value + ' years'],
       ['Gender:', document.getElementById('gender').value],
@@ -623,74 +662,47 @@
       ['Body Fat:', document.getElementById('bodyfat').value + '%'],
       ['Activity Level:', document.getElementById('activity').selectedOptions[0].text],
       ['Workout Calories:', document.getElementById('workout_calories').value + ' kcal/session'],
-      ['Workouts/Week:', document.getElementById('workouts_per_week').value],
-      ['Goal:', document.getElementById('goal').selectedOptions[0].text],
-      ['Protein Target:', document.getElementById('protein').selectedOptions[0].text + ' g/kg FFM'],
-      ['Fat Target:', document.getElementById('fat').selectedOptions[0].text + ' of calories']
+      ['Workouts/Week:', document.getElementById('workouts_per_week').value]
     ];
-  
-    inputs.forEach(([label, value], index) => {
-      doc.text(15, 45 + (index * 7), `${label} ${value}`);
+
+    inputs.forEach((item, index) => {
+      doc.text(`${item[0]} ${item[1]}`, 15, 45 + (index * 7));
     });
-  
+    
     // Results Section
+    doc.setFontSize(14); 
     doc.setFont('helvetica', 'bold');
-    doc.text('Nutrition Targets for Your Goal', 15, 130);
-    doc.setFont('helvetica', 'normal');
-  
-    const resultsData = [
-      ['Target Energy Range', document.getElementById('target_energy').textContent],
-      ['Protein', 
-       document.getElementById('protein_value').textContent,
-       document.getElementById('protein_grams').textContent,
-       document.getElementById('protein_calories').textContent
-      ],
-      ['Fat',
-       document.getElementById('fat_percentage').textContent,
-       document.getElementById('fat_grams').textContent,
-       document.getElementById('fat_calories').textContent
-      ],
-      ['Carbs',
-       document.getElementById('carb_percentage').textContent,
-       document.getElementById('carb_grams').textContent,
-       document.getElementById('carb_calories').textContent
-      ],
-      ['Fiber',
-       document.getElementById('fiber_value').textContent,
-       document.getElementById('fiber_grams').textContent,
-       ''
-      ],
-      ['Fluid Intake',
-       document.getElementById('fluid_ml_per_kg').textContent,
-       document.getElementById('fluid_total').textContent,
-       ''
-      ]
-    ];
-  
+    doc.text('Nutrition Recommendations', 15, 110);
+    
+    // Add table for results
     doc.autoTable({
-      startY: 135,
-      head: [['Nutrient', 'Value', 'Calculated Amount', 'Calculated Calories']],
-      body: resultsData,
+      startY: 115,
+      head: [['Nutrient', 'Value', 'Amount', 'Calories']],
+      body: [
+        ['Target Energy', document.getElementById('target_energy').textContent, '', ''],
+        ['Protein', document.getElementById('protein_value').textContent, 
+         document.getElementById('protein_grams').textContent, 
+         document.getElementById('protein_calories').textContent],
+        ['Fat', document.getElementById('fat_percentage').textContent,
+         document.getElementById('fat_grams').textContent,
+         document.getElementById('fat_calories').textContent],
+        ['Carbs', document.getElementById('carb_percentage').textContent,
+         document.getElementById('carb_grams').textContent,
+         document.getElementById('carb_calories').textContent],
+        ['Fiber', document.getElementById('fiber_value').textContent,
+         document.getElementById('fiber_grams').textContent, ''],
+        ['Fluid Intake', document.getElementById('fluid_ml_per_kg').textContent,
+         document.getElementById('fluid_total').textContent, '']
+      ],
       theme: 'grid',
       styles: { fontSize: 10 },
-      headStyles: { fillColor: [0, 59, 89] }, // Dark blue from your theme
-      columnStyles: {
-        0: { cellWidth: 45 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 50 }
-      }
+      headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255] }
     });
-  
+    
     // Add footer
-    const pageCount = doc.getNumberOfPages();
-    for(let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(10);
-      doc.text(`Generated by Fitomics - ${new Date().toLocaleDateString()}`, 
-        15, doc.internal.pageSize.height - 10);
-    }
-  
+    doc.setFontSize(8);
+    doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, 15, 280);
+    
     // Save the PDF
     doc.save('nutrition_report.pdf');
   }
